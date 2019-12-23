@@ -31,7 +31,7 @@
  */
 
 #include "spellchecker.h"
-#include "engine.h"
+#include <skeyer/engine.h>
 
 #ifdef HAVE_HUNSPELL
 #include "hunspell/hunspell.hxx"
@@ -206,13 +206,21 @@ bool SpellChecker::spell(const QString &word)
 QStringList SpellChecker::suggest(const QString &word,
                                   int limit)
 {
-    Q_UNUSED(limit);
     Q_D(SpellChecker);
+    QStringList results;
 
     if (not enabled()) {
-        return QStringList();
+        return results;
     }
-    return d->engine->match(word);
+    d->engine->setCurrentWord(word);
+    if (limit > d->engine->rowCount()) {
+        limit = d->engine->rowCount();
+    }
+    for (int i = 0; i < limit; i++) {
+        results << d->engine->data(d->engine->index(i, 0), Qt::UserRole).toString();
+    }
+    qDebug() << "Skeyer results: " << results;
+    return results;
 }
 
 

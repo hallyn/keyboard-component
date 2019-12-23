@@ -26,14 +26,6 @@ SOURCES += \
     spellchecker.cpp \
     spellpredictworker.cpp \
     $${TOP_SRCDIR}/src/lib/logic/abstractlanguageplugin.cpp \
-    abstractwordmatcher.cpp \
-    bruteforcematcher.cpp \
-    engine.cpp \
-    keyboard.cpp \
-    keyboardmodel.cpp \
-    settingsmanager.cpp \
-    word.cpp \
-    wordlist.cpp
 
 HEADERS += \
     westernsupport.h \
@@ -44,15 +36,6 @@ HEADERS += \
     spellchecker.h \
     spellpredictworker.h \
     $${TOP_SRCDIR}/src/lib/logic/abstractlanguageplugin.h \
-    abstractwordmatcher.h \
-    bruteforcematcher.h \
-    engine.h \
-    keyboard.h \
-    keyboardmodel.h \
-    settingsmanager.h \
-    toplist.h \
-    word.h \
-    wordlist.h
 
 
 target.path = $${UBUNTU_KEYBOARD_LIB_DIR}
@@ -77,5 +60,5 @@ PKGCONFIG += hunspell
 DEFINES += HAVE_HUNSPELL
 
 # presage
-LIBS += -lpresage
+LIBS += -lpresage -lskeyer
 DEFINES += HUNSPELL_DICT_PATH=\\\"$$HUNSPELL_DICT_PATH\\\"
