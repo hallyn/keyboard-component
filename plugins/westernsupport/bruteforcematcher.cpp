@@ -143,6 +143,7 @@ void BruteForceMatcher::updateLocale(const QString &locale)
 {
     m_wordList.loadDictionary( locale );
 
+    return;
     // Check and Generate Cached data...
     const auto cursorBegin = m_wordList.begin();
     const auto cursorEnd = m_wordList.end();
