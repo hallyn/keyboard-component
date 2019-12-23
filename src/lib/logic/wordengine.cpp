@@ -172,7 +172,21 @@ void WordEngine::appendToCandidates(WordCandidateList *candidates,
 
     WordCandidate word_candidate(source, changed_candidate);
 
-    if (not candidates->contains(word_candidate)) {
+    if (source == WordCandidate::SourceSpellChecking) {
+        if(candidates->size() > 1) {
+            // Clear existing primary candidate if it came in before the spellchecking
+            WordCandidate previousPrimary = d->candidates->value(1);
+            if (previousPrimary.source() != WordCandidate::SourceSpellChecking) {
+                previousPrimary.setPrimary(false);
+                d->candidates->replace(1, previousPrimary);
+                word_candidate.setPrimary(true);
+                candidates->insert(1, word_candidate);
+                Q_EMIT primaryCandidateChanged(word_candidate.word());
+            }
+        } else {
+            candidates->insert(1, word_candidate);
+        }
+    } else if (not candidates->contains(word_candidate)) {
         candidates->append(word_candidate);
     }
 }

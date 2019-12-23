@@ -55,7 +55,7 @@ void SpellPredictWorker::parsePredictionText(const QString& surroundingLeft, con
         list << preedit;
         // Emit the override corrections instantly so they're always up-to-date
         // as they're often used for short words like 'I'
-        Q_EMIT newPredictionSuggestions(origPreedit, list);
+        Q_EMIT newSpellingSuggestions(origPreedit, list);
     } else if(m_spellChecker.spell(preedit)) {
         // If the user input is spelt correctly add it to the start of the predictions
         list << preedit;

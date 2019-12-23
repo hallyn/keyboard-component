@@ -3,6 +3,7 @@ QT       -= gui
 TARGET = westernsupport
 TEMPLATE = lib
 CONFIG += staticlib
+CONFIG += c++11
 
 DEFINES += WESTERNSUPPORT_LIBRARY
 
@@ -24,7 +25,15 @@ SOURCES += \
     candidatescallback.cpp \
     spellchecker.cpp \
     spellpredictworker.cpp \
-    $${TOP_SRCDIR}/src/lib/logic/abstractlanguageplugin.cpp
+    $${TOP_SRCDIR}/src/lib/logic/abstractlanguageplugin.cpp \
+    abstractwordmatcher.cpp \
+    bruteforcematcher.cpp \
+    engine.cpp \
+    keyboard.cpp \
+    keyboardmodel.cpp \
+    settingsmanager.cpp \
+    word.cpp \
+    wordlist.cpp
 
 HEADERS += \
     westernsupport.h \
@@ -34,7 +43,16 @@ HEADERS += \
     candidatescallback.h \
     spellchecker.h \
     spellpredictworker.h \
-    $${TOP_SRCDIR}/src/lib/logic/abstractlanguageplugin.h
+    $${TOP_SRCDIR}/src/lib/logic/abstractlanguageplugin.h \
+    abstractwordmatcher.h \
+    bruteforcematcher.h \
+    engine.h \
+    keyboard.h \
+    keyboardmodel.h \
+    settingsmanager.h \
+    toplist.h \
+    word.h \
+    wordlist.h
 
 
 target.path = $${UBUNTU_KEYBOARD_LIB_DIR}
@@ -47,6 +65,11 @@ api_headers.files = $$API_HEADERS
 api_headers.path = $$UBUNTU_KEYBOARD_HEADERS_DIR
 INSTALLS += api_headers
 
+skeyer_resources.files = skeyer-resources/*
+skeyer_resources.path = $${UBUNTU_KEYBOARD_LIB_DIR}/skeyer-resources
+INSTALLS += skeyer_resources
+
+DEFINES += SKEYER_DATADIR=\\\"$${skeyer_resources.path}\\\"
 
 # hunspell
 CONFIG += link_pkgconfig

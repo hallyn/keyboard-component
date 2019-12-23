@@ -31,6 +31,7 @@
  */
 
 #include "spellchecker.h"
+#include "engine.h"
 
 #ifdef HAVE_HUNSPELL
 #include "hunspell/hunspell.hxx"
@@ -72,6 +73,7 @@ struct SpellCheckerPrivate
     QString user_dictionary_file;
     QString aff_file;
     QString dic_file;
+    Skeyer::Engine *engine;
 
     SpellCheckerPrivate(const QString &user_dictionary);
     ~SpellCheckerPrivate();
@@ -88,6 +90,7 @@ SpellCheckerPrivate::SpellCheckerPrivate(const QString &user_dictionary)
     , user_dictionary_file(user_dictionary)
     , aff_file()
     , dic_file()
+    , engine(new Skeyer::Engine())
 {
 }
 
@@ -122,6 +125,7 @@ void SpellCheckerPrivate::clear()
     hunspell = 0;
     aff_file.clear();
     dic_file.clear();
+    delete(engine);
 }
 
 SpellChecker::~SpellChecker()
@@ -202,29 +206,13 @@ bool SpellChecker::spell(const QString &word)
 QStringList SpellChecker::suggest(const QString &word,
                                   int limit)
 {
+    Q_UNUSED(limit);
     Q_D(SpellChecker);
 
     if (not enabled()) {
         return QStringList();
     }
-
-    char** suggestions = NULL;
-    const int suggestions_count = d->hunspell->suggest(&suggestions, d->codec->fromUnicode(word));
-
-    // Less than zero means some error.
-    if (suggestions_count < 0) {
-        qWarning() << __PRETTY_FUNCTION__ << ": Failed to get suggestions for" << word << ".";
-        return QStringList();
-    }
-
-    QStringList result;
-    const int final_limit((limit < 0) ? suggestions_count : qMin(limit, suggestions_count));
-
-    for (int index(0); index < final_limit; ++index) {
-        result << d->codec->toUnicode(suggestions[index]);
-    }
-    d->hunspell->free_list(&suggestions, suggestions_count);
-    return result;
+    return d->engine->match(word);
 }
 
 
