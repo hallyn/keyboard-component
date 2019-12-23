@@ -64,10 +64,10 @@ void WesternLanguagesPlugin::addToSpellCheckerUserWordList(const QString& word)
     Q_EMIT addToUserWordList(word);
 }
 
-bool WesternLanguagesPlugin::setLanguage(const QString& languageId, const QString& pluginPath)
+bool WesternLanguagesPlugin::setLanguage(const QString& languageId, const QString& dataPath)
 {
-    Q_EMIT setSpellPredictLanguage(languageId, pluginPath);
-    loadOverrides(pluginPath);
+    Q_EMIT setSpellPredictLanguage(languageId, dataPath);
+    loadOverrides(dataPath);
     return true;
 }
 

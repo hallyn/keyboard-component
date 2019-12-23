@@ -34,6 +34,7 @@
 
 #include <QtQml>
 #include <libintl.h>
+#include <skeyer/keyboardmodel.h>
 
 MaliitKeyboardPlugin::MaliitKeyboardPlugin(QObject *parent)
     : QObject(parent)
@@ -43,7 +44,10 @@ MaliitKeyboardPlugin::MaliitKeyboardPlugin(QObject *parent)
     textdomain("ubuntu-keyboard");
 
     qmlRegisterUncreatableType<InputMethod>("UbuntuKeyboard", 1, 0, "InputMethod",
-                                            QString("InputMethod can't be created in QML"));
+                                            QString("InputMethod cannot be created in QML"));
+    qmlRegisterUncreatableType<Skeyer::KeyboardModel>("UbuntuKeyboard", 1, 0, "KeyboardModel", 
+                                            QString("KeyboardModel cannot be created in QML"));
+    qRegisterMetaType<Skeyer::KeyboardModel*>("KeyboardModel*");
 }
 
 QString MaliitKeyboardPlugin::name() const

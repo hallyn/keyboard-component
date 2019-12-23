@@ -48,7 +48,7 @@ public:
     //! spell checker
     virtual void spellCheckerSuggest(const QString& word, int limit);
     virtual void addToSpellCheckerUserWordList(const QString& word);
-    virtual bool setLanguage(const QString& languageId, const QString& pluginPath);
+    virtual bool setLanguage(const QString& languageId, const QString& dataPath);
 
 signals:
     void newSpellingSuggestions(QString word, QStringList suggestions);

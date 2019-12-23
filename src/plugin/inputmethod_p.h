@@ -88,6 +88,9 @@ public:
     KeyboardSettings m_settings;
     GreeterStatus *m_greeterStatus;
 
+    Skeyer::KeyboardModel *keyboardModel;
+    bool jsonLayout;
+
     WordRibbon* wordRibbon;
 
     int previous_position;
@@ -115,6 +118,8 @@ public:
         , m_geometry(new KeyboardGeometry(q))
         , m_settings()
         , m_greeterStatus(new GreeterStatus())
+        , keyboardModel(new Skeyer::KeyboardModel())
+        , jsonLayout(false)
         , wordRibbon(new WordRibbon)
         , previous_position(-1)
     {

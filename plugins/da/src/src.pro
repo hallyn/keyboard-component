@@ -4,20 +4,7 @@ TOP_SRCDIR = $$PWD/../../..
 include($${TOP_SRCDIR}/config.pri)
 
 TEMPLATE        = lib
-CONFIG         += plugin
-QT             += widgets
-INCLUDEPATH    += \
-    $${TOP_SRCDIR}/src/ \
-    $${TOP_SRCDIR}/src/lib/ \
-    $${TOP_SRCDIR}/src/lib/logic/
-    $${TOP_SRCDIR}/plugins/westernsupport
-
-HEADERS         = \
-    danishplugin.h
-
-TARGET          = $$qtLibraryTarget(daplugin)
-
-EXAMPLE_FILES = danishplugin.json
+TARGET          = dummy
 
 # generate database for presage:
 PLUGIN_INSTALL_PATH = $${UBUNTU_KEYBOARD_LIB_DIR}/da/
@@ -32,19 +19,18 @@ lang_db_da.files += $$PWD/database_da.db
 lang_db_da_install.files += $$PWD/database_da.db
 lang_db_da_install.path = $$PLUGIN_INSTALL_PATH
 
+layout.files += $$PWD/keyboard_layout.json
+layout.path += $$PLUGIN_INSTALL_PATH
+
+dictionary.files += $$PWD/dictionary.txt
+dictionary.path += $$PLUGIN_INSTALL_PATH
+
 overrides.files += $$PWD/overrides.csv
 overrides.path += $$PLUGIN_INSTALL_PATH
 
 QMAKE_EXTRA_TARGETS += lang_db_da lang_db_da_install
 
-target.path = $$PLUGIN_INSTALL_PATH
-INSTALLS += target lang_db_da_install overrides
+INSTALLS += layout dictionary lang_db_da_install overrides
 
 OTHER_FILES += \
-    danishplugin.json \
     free_ebook.txt
-
-LIBS += $${TOP_BUILDDIR}/plugins/plugins/libwesternsupport.a -lpresage -lhunspell
-
-INCLUDEPATH += $$PWD/../../westernsupport
-DEPENDPATH += $$PWD/../../westernsupport

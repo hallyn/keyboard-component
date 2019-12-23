@@ -32,9 +32,16 @@ ActionKey {
         if (maliit_input_method.useHapticFeedback)
             pressEffect.start();
 
-        if (panel.state == "CHARACTERS")
-            panel.state = "SYMBOLS";
-        else
-            panel.state = "CHARACTERS";
+        if (maliit_input_method.jsonLayout) {
+            if (maliit_input_method.keyboardModel.layout == 0)
+                maliit_input_method.keyboardModel.setKeyboardLayout(1);
+            else
+                maliit_input_method.keyboardModel.setKeyboardLayout(0);
+        } else {
+            if (panel.state == "CHARACTERS")
+                panel.state = "SYMBOLS";
+            else
+               panel.state = "CHARACTERS";
+        }
     }
 }

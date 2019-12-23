@@ -84,13 +84,13 @@ void SpellPredictWorker::parsePredictionText(const QString& surroundingLeft, con
     Q_EMIT newPredictionSuggestions(origPreedit, list);
 }
 
-void SpellPredictWorker::setLanguage(QString locale, QString pluginPath)
+void SpellPredictWorker::setLanguage(QString locale, QString dataPath)
 {
     // locale for secondary layouts I.E., dvorak will be formatted as locale@layout
     // in this case we want to drop the layout portion
     auto baseLocale = locale.split('@')[0];
     QString dbFileName = "database_"+baseLocale+".db";
-    QString fullPath(pluginPath + QDir::separator() + dbFileName);
+    QString fullPath(dataPath + QDir::separator() + dbFileName);
     m_spellChecker.setLanguage(locale);
     m_spellChecker.setEnabled(true);
 

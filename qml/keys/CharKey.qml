@@ -26,7 +26,8 @@ Item {
 
     property int padding: 0
 
-    width: leftSide || rightSide ? panel.keyWidth * 2 : panel.keyWidth
+    width: label.length > 2 ? panel.keyWidth + units.gu(UI.emailLayoutUrlKeyPadding)
+                            : (leftSide || rightSide ? panel.keyWidth * 2 : panel.keyWidth)
     height: panel.keyHeight
 
     /* to be set in keyboard layouts */

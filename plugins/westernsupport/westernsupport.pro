@@ -2,7 +2,6 @@ QT       -= gui
 
 TARGET = westernsupport
 TEMPLATE = lib
-CONFIG += staticlib
 CONFIG += c++11
 
 DEFINES += WESTERNSUPPORT_LIBRARY
@@ -44,15 +43,13 @@ INSTALLS += target
 # for plugins
 API_HEADERS = westernlanguagesplugin.h
 
+EXAMPLE_FILES = westernlanguageslugin.json
+
 api_headers.files = $$API_HEADERS
 api_headers.path = $$UBUNTU_KEYBOARD_HEADERS_DIR
 INSTALLS += api_headers
 
-skeyer_resources.files = skeyer-resources/*
-skeyer_resources.path = $${UBUNTU_KEYBOARD_LIB_DIR}/skeyer-resources
-INSTALLS += skeyer_resources
-
-DEFINES += SKEYER_DATADIR=\\\"$${skeyer_resources.path}\\\"
+DEFINES += SKEYER_DATADIR=\\\"$${UBUNTU_KEYBOARD_LIB_DIR}\\\"
 
 # hunspell
 CONFIG += link_pkgconfig
@@ -62,3 +59,5 @@ DEFINES += HAVE_HUNSPELL
 # presage
 LIBS += -lpresage -lskeyer
 DEFINES += HUNSPELL_DICT_PATH=\\\"$$HUNSPELL_DICT_PATH\\\"
+
+OTHER_FILES += westernlanguagesplugin.json

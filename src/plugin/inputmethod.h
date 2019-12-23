@@ -36,6 +36,8 @@
 #include <maliit/plugins/abstractinputmethodhost.h>
 #include <maliit/plugins/keyoverride.h>
 
+#include <skeyer/keyboardmodel.h>
+
 #include <QtGui>
 #include <QtQuick/QQuickView>
 
@@ -67,6 +69,8 @@ class InputMethod
     Q_PROPERTY(QString theme READ theme NOTIFY themeChanged)
     Q_PROPERTY(QString surroundingLeft READ surroundingLeft)
     Q_PROPERTY(QString surroundingRight READ surroundingRight)
+    Q_PROPERTY(Skeyer::KeyboardModel* keyboardModel READ keyboardModel NOTIFY keyboardModelChanged)
+    Q_PROPERTY(bool jsonLayout READ jsonLayout NOTIFY jsonLayoutChanged)
 
     Q_ENUMS(TextContentType)
 
@@ -142,6 +146,9 @@ public:
     double opacity() const;
     const QString theme() const;
 
+    Skeyer::KeyboardModel* keyboardModel() const;
+    bool jsonLayout() const;
+
     QObject* actionKeyOverride() const;
 
     QString surroundingLeft();
@@ -173,7 +180,9 @@ Q_SIGNALS:
     void keyboardReset();
     void hasSelectionChanged(bool hasSelection);
     void currentPluginPathChanged(QString currentPluginPath);
-    void languagePluginChanged(QString pluginPath, QString languageId);
+    void languagePluginChanged(QString pluginPath, QString languageId, QString dataPath);
+    void keyboardModelChanged(Skeyer::KeyboardModel* keyboardModel);
+    void jsonLayoutChanged(bool jsonLayout);
     void preeditChanged(QString preedit);
     void cursorPositionChanged(int cursor_position);
     void opacityChanged(double opacity);

@@ -32,6 +32,7 @@
 
 #include "spellchecker.h"
 #include <skeyer/engine.h>
+#include <skeyer/settingsmanager.h>
 
 #ifdef HAVE_HUNSPELL
 #include "hunspell/hunspell.hxx"
@@ -219,7 +220,6 @@ QStringList SpellChecker::suggest(const QString &word,
     for (int i = 0; i < limit; i++) {
         results << d->engine->data(d->engine->index(i, 0), Qt::UserRole).toString();
     }
-    qDebug() << "Skeyer results: " << results;
     return results;
 }
 
@@ -304,6 +304,8 @@ bool SpellChecker::setLanguage(const QString &language)
     d->aff_file = dictPath() + QDir::separator() + affMatches[0];
     d->dic_file = dictPath() + QDir::separator() + dicMatches[0];
     d->user_dictionary_file = QStandardPaths::writableLocation(QStandardPaths::DataLocation) + QDir::separator() + language + "_userDictionary.dic";
+
+    Skeyer::SettingsManager::instance()->setCurrentLocale(language);
 
     qDebug() << "spellechecker.cpp in setLanguage() aff_file=" << d->aff_file << "dic_file=" << d->dic_file << "user dictionary=" << d->user_dictionary_file;
 

@@ -35,7 +35,7 @@
 namespace MaliitKeyboard {
 namespace Logic {
 
-#define DEFAULT_PLUGIN "/usr/share/maliit/plugins/com/ubuntu/lib/en/libenplugin.so"
+#define DEFAULT_PLUGIN "/usr/share/maliit/plugins/com/ubuntu/lib/libwesternsupport.so"
 
 //! \class WordEngine
 //! \brief Provides error correction (based on Hunspell) and word
@@ -417,7 +417,7 @@ void WordEngine::addToUserDictionary(const QString &word)
     d->languagePlugin->addToSpellCheckerUserWordList(word);
 }
 
-void WordEngine::onLanguageChanged(const QString &pluginPath, const QString &languageId)
+void WordEngine::onLanguageChanged(const QString &pluginPath, const QString &languageId, const QString &dataPath)
 {
     Q_D(WordEngine);
 
@@ -425,7 +425,7 @@ void WordEngine::onLanguageChanged(const QString &pluginPath, const QString &lan
 
     setWordPredictionEnabled(d->requested_prediction_state);
 
-    d->languagePlugin->setLanguage(languageId, QFileInfo(d->currentPlugin).absolutePath());
+    d->languagePlugin->setLanguage(languageId, QFileInfo(dataPath).absolutePath());
 
     Q_EMIT enabledChanged(isEnabled());
 

@@ -4,20 +4,7 @@ TOP_SRCDIR = $$PWD/../../..
 include($${TOP_SRCDIR}/config.pri)
 
 TEMPLATE        = lib
-CONFIG         += plugin
-QT             += widgets
-INCLUDEPATH    += \
-    $${TOP_SRCDIR}/src/ \
-    $${TOP_SRCDIR}/src/lib/ \
-    $${TOP_SRCDIR}/src/lib/logic/
-    $${TOP_SRCDIR}/plugins/westernsupport
-
-HEADERS         = \
-    dutchplugin.h
-
-TARGET          = $$qtLibraryTarget(nlplugin)
-
-EXAMPLE_FILES = dutchplugin.json
+TARGET          = dummy
 
 # generate database for presage:
 PLUGIN_INSTALL_PATH = $${UBUNTU_KEYBOARD_LIB_DIR}/nl/
@@ -32,19 +19,18 @@ lang_db_nl.files += $$PWD/database_nl.db
 lang_db_nl_install.files += $$PWD/database_nl.db
 lang_db_nl_install.path = $$PLUGIN_INSTALL_PATH
 
+QMAKE_EXTRA_TARGETS += lang_db_nl lang_db_nl_install
+
+layout.files += $$PWD/keyboard_layout.json
+layout.path += $$PLUGIN_INSTALL_PATH
+
+dictionary.files += $$PWD/dictionary.txt
+dictionary.path += $$PLUGIN_INSTALL_PATH
+
 overrides.files += $$PWD/overrides.csv
 overrides.path += $$PLUGIN_INSTALL_PATH
 
-QMAKE_EXTRA_TARGETS += lang_db_nl lang_db_nl_install
-
-target.path = $$PLUGIN_INSTALL_PATH
-INSTALLS += target lang_db_nl_install overrides
+INSTALLS += layout dictionary lang_db_nl_install overrides
 
 OTHER_FILES += \
-    dutchplugin.json \
     free_ebook.txt
-
-LIBS += $${TOP_BUILDDIR}/plugins/plugins/libwesternsupport.a -lpresage -lhunspell
-
-INCLUDEPATH += $$PWD/../../westernsupport
-DEPENDPATH += $$PWD/../../westernsupport

@@ -17,6 +17,7 @@ class CandidatesCallback;
 class WesternLanguagesPlugin : public AbstractLanguagePlugin
 {
     Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.qt-project.Qt.Examples.WesternLangaugesPlugin" FILE "westernlanguagesplugin.json")
     Q_INTERFACES(LanguagePluginInterface)
 
 public:
@@ -30,7 +31,7 @@ public:
     //! spell checker
     virtual void spellCheckerSuggest(const QString& word, int limit);
     virtual void addToSpellCheckerUserWordList(const QString& word);
-    virtual bool setLanguage(const QString& languageId, const QString& pluginPath);
+    virtual bool setLanguage(const QString& languageId, const QString& dataPath);
     virtual void addSpellingOverride(const QString& orig, const QString& overriden);
     virtual void loadOverrides(const QString& pluginPath);
 

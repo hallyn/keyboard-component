@@ -4,20 +4,7 @@ TOP_SRCDIR = $$PWD/../../..
 include($${TOP_SRCDIR}/config.pri)
 
 TEMPLATE        = lib
-CONFIG         += plugin
-QT             += widgets
-INCLUDEPATH    += \
-    $${TOP_SRCDIR}/src/ \
-    $${TOP_SRCDIR}/src/lib/ \
-    $${TOP_SRCDIR}/src/lib/logic/
-    $${TOP_SRCDIR}/plugins/westernsupport
-
-HEADERS         = \
-    testlayoutplugin.h
-
-TARGET          = $$qtLibraryTarget(testlayoutplugin)
-
-EXAMPLE_FILES = testlayoutplugin.json
+TARGET          = dummy
 
 # generate database for presage:
 PLUGIN_INSTALL_PATH = $${UBUNTU_KEYBOARD_TEST_DIR}/testlayout/
@@ -34,14 +21,13 @@ lang_db_testlayout_install.path = $$PLUGIN_INSTALL_PATH
 
 QMAKE_EXTRA_TARGETS += lang_db_testlayout lang_db_testlayout_install
 
-target.path = $$PLUGIN_INSTALL_PATH
-INSTALLS += target lang_db_testlayout_install
+layout.files += $$PWD/keyboard_layout.json
+layout.path += $$PLUGIN_INSTALL_PATH
+
+dictionary.files += $$PWD/dictionary.txt
+dictionary.path += $$PLUGIN_INSTALL_PATH
+
+INSTALLS += layout dictionary lang_db_testlayout_install
 
 OTHER_FILES += \
-    testlayoutplugin.json \
-    the_picture_of_dorian_gray.txt
-
-LIBS += $${TOP_BUILDDIR}/plugins/plugins/libwesternsupport.a -lpresage -lhunspell
-
-INCLUDEPATH += $${TOP_SRCDIR}/plugins/westernsupport
-DEPENDPATH += $${TOP_SRCDIR}/plugins/westernsupport
+    empty.txt

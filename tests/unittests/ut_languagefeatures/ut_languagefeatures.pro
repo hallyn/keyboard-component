@@ -8,7 +8,8 @@ CONFIG += testcase
 TARGET = ut_languagefeatures
 QT = core testlib
 
-QMAKE_LFLAGS_RPATH=$${TOP_BUILDDIR}/src/plugin
+QMAKE_RPATHDIR+=$${TOP_BUILDDIR}/src/plugin
+QMAKE_RPATHDIR+=$${TOP_BUILDDIR}/plugins/plugins
 LIBS += -L$${TOP_BUILDDIR}/src/plugin -lubuntu-keyboard-plugin
 
 INCLUDEPATH    += \

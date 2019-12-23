@@ -39,6 +39,9 @@ Item {
     onHeightChanged: calculateKeyHeight();
 
     function numberOfRows() {
+        if (maliit_input_method.jsonLayout) {
+            return maliit_input_method.keyboardModel.rows
+        }
         if (typeof(content.numberOfRows) != 'undefined') {
             // Allow layouts to calculate this themselves if they're not using
             // a column/row layout

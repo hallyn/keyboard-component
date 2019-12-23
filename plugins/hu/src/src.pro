@@ -4,20 +4,7 @@ TOP_SRCDIR = $$PWD/../../..
 include($${TOP_SRCDIR}/config.pri)
 
 TEMPLATE        = lib
-CONFIG         += plugin
-QT             += widgets
-INCLUDEPATH    += \
-    $${TOP_SRCDIR}/src/ \
-    $${TOP_SRCDIR}/src/lib/ \
-    $${TOP_SRCDIR}/src/lib/logic/
-    $${TOP_SRCDIR}/plugins/westernsupport
-
-HEADERS         = \
-    hungarianplugin.h
-
-TARGET          = $$qtLibraryTarget(huplugin)
-
-EXAMPLE_FILES = hungarianplugin.json
+TARGET          = dummy
 
 # generate database for presage:
 PLUGIN_INSTALL_PATH = $${UBUNTU_KEYBOARD_LIB_DIR}/hu/
@@ -34,14 +21,13 @@ lang_db_hu_install.path = $$PLUGIN_INSTALL_PATH
 
 QMAKE_EXTRA_TARGETS += lang_db_hu lang_db_hu_install
 
-target.path = $$PLUGIN_INSTALL_PATH
-INSTALLS += target lang_db_hu_install
+layout.files += $$PWD/keyboard_layout.json
+layout.path += $$PLUGIN_INSTALL_PATH
+
+dictionary.files += $$PWD/dictionary.txt
+dictionary.path += $$PLUGIN_INSTALL_PATH
+
+INSTALLS += layout dictionary lang_db_hu_install
 
 OTHER_FILES += \
-    hungarianplugin.json \
     free_ebook.txt
-
-LIBS += $${TOP_BUILDDIR}/plugins/plugins/libwesternsupport.a -lpresage -lhunspell
-
-INCLUDEPATH += $$PWD/../../westernsupport
-DEPENDPATH += $$PWD/../../westernsupport

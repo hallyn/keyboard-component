@@ -125,18 +125,33 @@ Item {
             // EmailContentType
             if (contentType === 3) {
                 canvas.layoutId = "email";
-                return maliit_input_method.currentPluginPath + "/Keyboard_" + language + "_email.qml";
+                if (maliit_input_method.jsonLayout) {
+                    maliit_input_method.keyboardModel.setKeyboardLayout(2);
+                    return "languages/Keyboard_json.qml";
+                } else {
+                    return maliit_input_method.currentPluginPath + "/Keyboard_" + language + "_email.qml";
+                }
             }
 
             // UrlContentType
             if (contentType === 4) {
                 canvas.layoutId = "url";
-                return maliit_input_method.currentPluginPath + "/Keyboard_" + language + "_url_search.qml";
+                if (maliit_input_method.jsonLayout) {
+                    maliit_input_method.keyboardModel.setKeyboardLayout(3);
+                    return "languages/Keyboard_json.qml";
+                } else {
+                    return maliit_input_method.currentPluginPath + "/Keyboard_" + language + "_url_search.qml";
+                }
             }
 
             // FreeTextContentType used as fallback
             canvas.layoutId = "freetext";
-            return maliit_input_method.currentPluginPath + "/Keyboard_" + language + ".qml";
+            if (maliit_input_method.jsonLayout) {
+                maliit_input_method.keyboardModel.setKeyboardLayout(0);
+                return "languages/Keyboard_json.qml";
+            } else {
+                return maliit_input_method.currentPluginPath + "/Keyboard_" + language + ".qml";
+            }
         }
     }
 }

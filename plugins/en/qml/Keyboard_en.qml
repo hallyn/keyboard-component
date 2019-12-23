@@ -19,73 +19,119 @@ import keys 1.0
 
 KeyPad {
     anchors.fill: parent
+    anchors.bottomMargin: 0
 
-    content: c1
-    symbols: "languages/Keyboard_symbols.qml"
-
-    Column {
-        id: c1
+    Repeater {
+        id: generalKeys
         anchors.fill: parent
-        spacing: 0
+        model: maliit_input_method.keyboardModel.rows - 1 // Handle bottom row separately
 
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter;
-            spacing: 0
+        ListView {
+            id: row
 
-            CharKey { label: "q"; shifted: "Q"; extended: ["1"]; extendedShifted: ["1"]; leftSide: true; }
-            CharKey { label: "w"; shifted: "W"; extended: ["2"]; extendedShifted: ["2"] }
-            CharKey { label: "e"; shifted: "E"; extended: ["3", "è", "é", "ê", "ë", "€"]; extendedShifted: ["3", "È","É", "Ê", "Ë", "€"] }
-            CharKey { label: "r"; shifted: "R"; extended: ["4"]; extendedShifted: ["4"] }
-            CharKey { label: "t"; shifted: "T"; extended: ["5", "þ"]; extendedShifted: ["5", "Þ"] }
-            CharKey { label: "y"; shifted: "Y"; extended: ["6", "ý", "¥"]; extendedShifted: ["6", "Ý", "¥"] }
-            CharKey { label: "u"; shifted: "U"; extended: ["7", "û","ù","ú","ü"]; extendedShifted: ["7", "Û","Ù","Ú","Ü"] }
-            CharKey { label: "i"; shifted: "I"; extended: ["8", "î","ï","ì","í"]; extendedShifted: ["8", "Î","Ï","Ì","Í"] }
-            CharKey { label: "o"; shifted: "O"; extended: ["9", "ö","ô","ò","ó"]; extendedShifted: ["9", "Ö","Ô","Ò","Ó"] }
-            CharKey { label: "p"; shifted: "P"; extended: ["0"]; extendedShifted: ["0"]; rightSide: true; }
+            property int rowIndex: index
+
+            height: panel.keyHeight
+            width: panel.keyWidth * maliit_input_method.keyboardModel.currentGrid.rowWidth(rowIndex)
+
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: rowIndex * panel.keyHeight
+
+            model: maliit_input_method.keyboardModel.currentGrid.keyCount(rowIndex)
+
+            onModelChanged: {
+                calculateKeyWidth();
+                calculateKeyHeight();
+            }
+
+            orientation: ListView.Horizontal
+            interactive: false
+
+            delegate: CharKey {
+                property var keyModel: maliit_input_method.keyboardModel.keyModelAt(rowIndex, index, 0, maliit_input_method.keyboardModel.layout)
+                property var keyModelShifted: maliit_input_method.keyboardModel.keyModelAt(rowIndex, index, 1, maliit_input_method.keyboardModel.layout)
+                label: keyModel[0]
+                shifted: keyModelShifted[0]
+                extended: keyModel.length > 1 ? keyModel.slice(1) : null
+                extendedShifted: keyModelShifted.length > 1 ? keyModelShifted.slice(1) : null
+            }
         }
 
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter;
-            spacing: 0
+    }
 
-            CharKey { label: "a"; shifted: "A"; extended: ["ä","à","â","ª","á","å", "æ"]; extendedShifted: ["Ä","À","Â","ª","Á","Å","Æ"]; leftSide: true; }
-            CharKey { label: "s"; shifted: "S"; extended: ["ß","$"]; extendedShifted: ["$"] }
-            CharKey { label: "d"; shifted: "D"; extended: ["ð"]; extendedShifted: ["Ð"] }
-            CharKey { label: "f"; shifted: "F"; }
-            CharKey { label: "g"; shifted: "G"; }
-            CharKey { label: "h"; shifted: "H"; }
-            CharKey { label: "j"; shifted: "J"; }
-            CharKey { label: "k"; shifted: "K"; }
-            CharKey { label: "l"; shifted: "L"; rightSide: true; }
+    ShiftKey {
+        visible: !oneTwo.visible
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.topMargin: panel.keyHeight * 2
+    }
+
+    OneTwoKey { 
+        id: oneTwo
+        visible: maliit_input_method.keyboardModel.layout == 1
+        label: "1/2";
+        shifted: "2/2";
+        fontSize: units.gu(UI.fontSize);
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.topMargin: panel.keyHeight * 2
+    }
+
+    BackspaceKey {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.topMargin: panel.keyHeight * 2
+    }
+
+    Item {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.topMargin: units.gu(UI.row_margin)
+
+        height: panel.keyHeight
+
+        SymbolShiftKey { id: symShiftKey;                            anchors.left: parent.left; height: parent.height; }
+
+        LanguageKey    { id: languageMenuButton;                     anchors.left: symShiftKey.right; height: parent.height; }
+
+        CharKey { 
+            id: commaKey;
+            property var keyModel: maliit_input_method.keyboardModel.keyModelAt(3, 0, 0, maliit_input_method.keyboardModel.layout)
+            property var keyModelShifted: maliit_input_method.keyboardModel.keyModelAt(3, 0, 1, maliit_input_method.keyboardModel.layout)
+            label: keyModel[0]
+            shifted: keyModelShifted[0]
+            extended: keyModel.length > 1 ? keyModel.slice(1) : null
+            extendedShifted: keyModelShifted.length > 1 ? keyModelShifted.slice(1) : null
+            anchors.left: languageMenuButton.right;
+            height: parent.height;
         }
 
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter;
-            spacing: 0
+        SpaceKey { id: spaceKey;                               anchors.left: commaKey.right; anchors.right: extraKeys.left; noMagnifier: true; height: parent.height; }
 
-            ShiftKey {}
-            CharKey { label: "z"; shifted: "Z"; }
-            CharKey { label: "x"; shifted: "X"; }
-            CharKey { label: "c"; shifted: "C"; extended: ["ç"]; extendedShifted: ["Ç"] }
-            CharKey { label: "v"; shifted: "V"; }
-            CharKey { label: "b"; shifted: "B"; }
-            CharKey { label: "n"; shifted: "N"; extended: ["ñ"]; extendedShifted: ["Ñ"] }
-            CharKey { label: "m"; shifted: "M"; }
-            BackspaceKey {}
+        ListView {
+            id: extraKeys
+            anchors.right: enterKey.left
+
+            height: parent.height
+            width: contentWidth
+
+            model: maliit_input_method.keyboardModel.currentGrid.keyCount(3) - 1 // Display first key before space bar
+
+            orientation: ListView.Horizontal
+            interactive: false
+
+            delegate: CharKey {
+                property var keyModel: maliit_input_method.keyboardModel.keyModelAt(3, index + 1, 0, maliit_input_method.keyboardModel.layout)
+                property var keyModelShifted: maliit_input_method.keyboardModel.keyModelAt(3, index + 1, 1, maliit_input_method.keyboardModel.layout)
+                label: keyModel[0]
+                shifted: keyModelShifted[0]
+                extended: keyModel.length > 1 ? keyModel.slice(1) : null
+                extendedShifted: keyModelShifted.length > 1 ? keyModelShifted.slice(1) : null
+                height: parent.height
+            }
         }
 
-        Item {
-            anchors.left: parent.left
-            anchors.right: parent.right
-
-            height: panel.keyHeight + units.gu(UI.row_margin);
-
-            SymbolShiftKey { id: symShiftKey;                            anchors.left: parent.left; height: parent.height; }
-            LanguageKey    { id: languageMenuButton;                     anchors.left: symShiftKey.right; height: parent.height; }
-            CharKey        { id: commaKey;    label: ","; shifted: ","; extended: ["'", "\"", ";", ":", "@", "&", "(", ")"]; extendedShifted: ["'", "\"", ";", ":", "@", "&", "(", ")"]; anchors.left: languageMenuButton.right; height: parent.height; }
-            SpaceKey       { id: spaceKey;                               anchors.left: commaKey.right; anchors.right: dotKey.left; noMagnifier: true; height: parent.height; }
-            CharKey        { id: dotKey;      label: "."; shifted: "."; extended: ["?", "-", "_", "!", "+", "%","#","/"];  extendedShifted: ["?", "-", "_", "!", "+", "%","#","/"]; anchors.right: enterKey.left; height: parent.height; }
-            ReturnKey      { id: enterKey;                               anchors.right: parent.right; height: parent.height; }
-        }
-    } // column
+        ReturnKey      { id: enterKey;                               anchors.right: parent.right; height: parent.height; }
+    }
 }

@@ -1,8 +1,7 @@
 CONFIG += ordered
 TEMPLATE = subdirs
 SUBDIRS = \
-    src \
-    qml
+    src
 
 QMAKE_EXTRA_TARGETS += check
 check.target = check

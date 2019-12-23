@@ -103,7 +103,7 @@ InputMethod::InputMethod(MAbstractInputMethodHost *host)
 
     connect(this, SIGNAL(contentTypeChanged(TextContentType)), this, SLOT(setContentType(TextContentType)));
     connect(this, SIGNAL(activeLanguageChanged(QString)), this, SLOT(onLanguageChanged(QString)));
-    connect(this, SIGNAL(languagePluginChanged(QString, QString)), d->editor.wordEngine(), SLOT(onLanguageChanged(QString, QString)));
+    connect(this, SIGNAL(languagePluginChanged(QString, QString, QString)), d->editor.wordEngine(), SLOT(onLanguageChanged(QString, QString, QString)));
     connect(&d->event_handler, SIGNAL(qmlCandidateChanged(QStringList)), d->editor.wordEngine(), SLOT(updateQmlCandidates(QStringList)));
     connect(this, SIGNAL(hasSelectionChanged(bool)), &d->editor, SLOT(onHasSelectionChanged(bool)));
     connect(d->editor.wordEngine(), SIGNAL(pluginChanged()), this, SLOT(onWordEnginePluginChanged()));
@@ -573,6 +573,8 @@ void InputMethod::setActiveLanguage(const QString &newLanguage)
         }
     }
 
+    d->jsonLayout = d->keyboardModel->loadLayout(newLanguage);
+
     if (d->activeLanguage == newLanguage)
         return;
 
@@ -582,6 +584,8 @@ void InputMethod::setActiveLanguage(const QString &newLanguage)
     d->activeLanguage = newLanguage;
     d->host->setLanguage(newLanguage);
     d->m_settings.setActiveLanguage(newLanguage);
+    Q_EMIT keyboardModelChanged(d->keyboardModel);
+    Q_EMIT jsonLayoutChanged(d->jsonLayout);
 
     qDebug() << "in inputMethod.cpp setActiveLanguage() emitting activeLanguageChanged to" << d->activeLanguage;
     Q_EMIT activeLanguageChanged(d->activeLanguage);
@@ -722,9 +726,16 @@ bool InputMethod::languageIsSupported(const QString plugin) {
 void InputMethod::onLanguageChanged(const QString &language) {
     Q_D(InputMethod);
     foreach(QString pluginPath, d->pluginPaths) {
-        QFile testFile(pluginPath + QDir::separator() + language + QDir::separator() + "lib" + language + "plugin.so");
-        if (testFile.exists()) {
-            Q_EMIT languagePluginChanged(testFile.fileName(), language);
+        // Determine whether this layout supplies its own word engine 
+        // implementation or if it uses the shared western languages
+        // plugin
+        QFile testSoFile(pluginPath + QDir::separator() + language + QDir::separator() + "lib" + language + "plugin.so");
+        QFile testJsonFile(pluginPath + QDir::separator() + language + QDir::separator() + "keyboard_layout.json");
+        if (testSoFile.exists()) {
+            Q_EMIT languagePluginChanged(testSoFile.fileName(), language, testSoFile.fileName());
+            return;
+        } else if (testJsonFile.exists()) {
+            Q_EMIT languagePluginChanged("/usr/share/maliit/plugins/com/ubuntu/lib/libwesternsupport.so", language, pluginPath + QDir::separator() + language + QDir::separator());
             return;
         }
     }
@@ -736,4 +747,16 @@ void InputMethod::onPluginPathsChanged(const QStringList& pluginPaths) {
     Q_UNUSED(pluginPaths);
 
     d->updatePluginPaths();
+}
+
+Skeyer::KeyboardModel *InputMethod::keyboardModel() const
+{
+    Q_D(const InputMethod);
+    return d->keyboardModel;
+}
+
+bool InputMethod::jsonLayout() const
+{
+    Q_D(const InputMethod);
+    return d->jsonLayout;
 }
