@@ -39,7 +39,7 @@ Item {
     onHeightChanged: calculateKeyHeight();
 
     function numberOfRows() {
-        if (maliit_input_method.jsonLayout) {
+        if (maliit_input_method.jsonLayout && canvas.layoutId != "number" && canvas.layoutId != "telephone") {
             return maliit_input_method.keyboardModel.rows
         }
         if (typeof(content.numberOfRows) != 'undefined') {
