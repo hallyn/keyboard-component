@@ -183,6 +183,9 @@ void WordEngine::appendToCandidates(WordCandidateList *candidates,
                 candidates->insert(1, word_candidate);
                 Q_EMIT primaryCandidateChanged(word_candidate.word());
             }
+            // Remove duplicated suggestions from both prediction and spell checking
+            WordCandidate duplicate(WordCandidate::SourcePrediction, changed_candidate);
+            candidates->removeAll(duplicate);
         } else {
             candidates->insert(1, word_candidate);
         }
