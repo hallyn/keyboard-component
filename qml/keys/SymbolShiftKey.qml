@@ -32,9 +32,23 @@ ActionKey {
         if (maliit_input_method.useHapticFeedback)
             pressEffect.start();
 
+        hideTimer.restart()
+    }
+
+    onReleased: {
+        hideTimer.stop()
+
         if (panel.state == "CHARACTERS")
             panel.state = "SYMBOLS";
         else
             panel.state = "CHARACTERS";
+    }
+
+    Timer {
+        id: hideTimer
+        interval: 2000
+        onTriggered: {
+            maliit_input_method.hide();
+        }
     }
 }
