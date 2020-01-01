@@ -32,6 +32,8 @@ MultiPointTouchArea {
     property bool held: false
     property alias mouseX: point.x
     property alias mouseY: point.y
+    property var firstX: 0
+    property var firstY: 0
     // Keep track of the touch start position ourselves instead of using
     // point.startY, as this always reports 0 for mouse interaction 
     // (https://bugreports.qt.io/browse/QTBUG-41692)
@@ -51,46 +53,94 @@ MultiPointTouchArea {
         holdTimer.stop();
     }
 
+    property var keyMap: []
+    function walkKeyChildren(obj) {
+        for (var i = 0; i < obj.children.length; i++) {
+            var child = obj.children[i];
+            if (child.label && child.label != "undefined") {
+                root.keyMap.push(child)
+            } else {
+                walkKeyChildren(child)
+            }
+        }
+    }
+
+    function buildKeyMap() {
+        walkKeyChildren(panel)
+    }
+
+    property var allPoints: []
+    function addPoint(obj, x, y) {
+        var p = obj.parent.mapToItem(panel, x, y)
+        allPoints.push(p)
+    }
+
+    function walkAllPoints() {
+        var lastkey = ''
+        var res = []
+        for (var i = 0; i < allPoints.length; i++) {
+            var curPoint = allPoints[i]  // curPoints were converted at addPoint()
+            for (var j = 0; j < root.keyMap.length; j++) {
+                var keyEntry = root.keyMap[j]
+                var keyPoint = keyEntry.parent.mapToItem(panel, keyEntry.x, keyEntry.y, keyEntry.width, keyEntry.height)
+                if (curPoint.x >= keyPoint.x && curPoint.x <= keyPoint.x + keyPoint.width) {
+                    if (curPoint.y >= keyPoint.y && curPoint.y <= keyPoint.y + keyPoint.width) {
+                        if (keyEntry.label != lastkey) {
+                            res.push(keyEntry.label)
+                            lastkey = keyEntry.label
+                        }
+                    }
+                }
+            }
+        }
+        return res
+    }
+
     touchPoints: [
         TouchPoint { 
             id: point
-            property double lastY
-            property double lastYChange
+
+            onXChanged: {
+                if (swipedOut) {
+                    root.addPoint(root, point.x, point.y)
+                    return
+                }
+
+                if (point.x < root.x || point.x > root.x + root.width) {
+                    if (!swipedOut) {
+                        // We've swiped out of the key
+                        swipedOut = true;
+                        root.addPoint(root, firstX, firstY);
+                        cancelPress();
+                    }
+
+                    root.addPoint(root, point.x, point.y)
+                }
+            }
 
             // Dragging implemented here rather than in higher level
             // mouse area to avoid conflict with swipe selection
             // of extended keys
             onYChanged: {
-                if (point.y > root.y + root.height) {
+                if (swipedOut) {
+                    root.addPoint(root, point.x, point.y)
+                    return
+                }
+
+                if (point.y < root.y || point.y > root.y + root.height) {
                     if (!swipedOut) {
                         // We've swiped out of the key
                         swipedOut = true;
+                        root.addPoint(root, firstX, firstY);
                         cancelPress();
                     }
                     
+                    root.addPoint(root, point.x, point.y)
                     // Dirty hack, see onReleased below
-                    if (point.y > panel.height) {
+                    if (point.y > root.height) {
                         // Touch point released past height of keyboard.
                         return;
                     }
-
-                    var distance = point.y - lastY;
-                    // If changing direction wait until movement passes 1 gu
-                    // to avoid jitter
-                    if ((lastYChange * distance > 0 || Math.abs(distance) > units.gu(1)) && !held) {
-                        keyboardSurface.y += distance;
-                        lastY = point.y;
-                        lastYChange = distance;
-                    }
-                    // Hide if we get close to the bottom of the screen.
-                    // This works around issues with devices with touch buttons
-                    // below the screen preventing release events when swiped
-                    // over
-                    if(!held && point.sceneY > fullScreenItem.height - units.gu(4) && point.y > startY + units.gu(8)) {
-                        maliit_input_method.hide();
-                    }
-                } else {
-                    lastY = point.y;
                 }
             }
         }
@@ -113,6 +163,9 @@ MultiPointTouchArea {
     }
 
     onPressed: {
+        firstX = point.x
+        firstY = point.y
+        root.allPoints = []
         pressed = true;
         held = false;
         swipedOut = false;
@@ -138,21 +191,15 @@ MultiPointTouchArea {
 
     onReleased: {
 
-        // Don't evaluate if the release point is above the start point
-        // or further away from its start than the height of the whole keyboard.
-        // This works around touches sometimes being recognized as ending below
-        // the bottom of the screen.
-        if (point.y > panel.height) {
-            console.warn("Touch point released past height of keyboard. Ignoring.");
-        } else if (!(point.y <= startY)) {
-            // Handles swiping away the keyboard
-            // Hide if the end point is more than 8 grid units from the start
-            if (!held && point.y > startY + units.gu(8)) {
-                maliit_input_method.hide();
-            } else {
-                bounceBackAnimation.from = keyboardSurface.y;
-                bounceBackAnimation.start();
+        if (swipedOut) {
+            if (root.keyMap.length == 0) {
+                buildKeyMap()
             }
+            root.addPoint(root, point.x, point.y)
+            var keys = walkAllPoints()
+            // TODO - this is where we pass keys[] to the okboard engine
+            // and send the result to the spell correction engine.
+            console.warn("keys pressed: " + keys)
         }
 
         pressed = false;
