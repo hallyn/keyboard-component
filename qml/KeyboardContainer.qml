@@ -23,6 +23,8 @@ import UbuntuKeyboard 1.0
 Item {
     id: panel
 
+    property var curve_ok: false
+
     property int keyWidth: 0
     property int keyHeight: 0
 

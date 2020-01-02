@@ -15,6 +15,7 @@
  */
 
 import QtQuick 2.4
+import eu.cpbm.okboard 1.0 // okboard
 
 /*!
   MultiPointTouchArea is similar to the MouseArea
@@ -38,6 +39,7 @@ MultiPointTouchArea {
     // point.startY, as this always reports 0 for mouse interaction 
     // (https://bugreports.qt.io/browse/QTBUG-41692)
     property real startY
+    property var keys_ok: false
 
     property bool acceptDoubleClick: false
     maximumTouchPoints: 1
@@ -58,21 +60,34 @@ MultiPointTouchArea {
         for (var i = 0; i < obj.children.length; i++) {
             var child = obj.children[i];
             if (child.label && child.label != "undefined") {
-                root.keyMap.push(child)
+                child.caption = child.label;
+                root.keyMap.push(child);
             } else {
-                walkKeyChildren(child)
+                walkKeyChildren(child);
             }
         }
     }
 
     function buildKeyMap() {
-        walkKeyChildren(panel)
+        if (!root.keys_ok) {
+            walkKeyChildren(panel);
+            curveimpl.setLogFile("/tmp/curve.log");
+            curveimpl.setDebug(true);
+            curveimpl.loadKeys(panel.keyMap);
+            root.keys_ok = true;
+        }
+        curveimpl.setScreenSizePixels(Screen.Width, Screen.Height);
+
     }
 
-    property var allPoints: []
+    CurveKB {
+        id: curveimpl
+        onMatchingDone: { matching_done(candidates); }
+    }
+
     function addPoint(obj, x, y) {
         var p = obj.parent.mapToItem(panel, x, y)
-        allPoints.push(p)
+        curveimpl.addPoint(p.x, p.y, root.curveIndex)
     }
 
     function walkAllPoints() {
@@ -110,6 +125,8 @@ MultiPointTouchArea {
                     if (!swipedOut) {
                         // We've swiped out of the key
                         swipedOut = true;
+                        curveimpl.resetCurve()
+                        root.curveIndex++;
                         root.addPoint(root, firstX, firstY);
                         cancelPress();
                     }
@@ -165,7 +182,6 @@ MultiPointTouchArea {
     onPressed: {
         firstX = point.x
         firstY = point.y
-        root.allPoints = []
         pressed = true;
         held = false;
         swipedOut = false;
@@ -195,11 +211,13 @@ MultiPointTouchArea {
             if (root.keyMap.length == 0) {
                 buildKeyMap()
             }
+            if (!panel.curve_ok) {
+                filename = "/usr/share/okboard/en.tre";
+                panel.curve_ok = curveimpl.loadTree(filename);
+            }
             root.addPoint(root, point.x, point.y)
-            var keys = walkAllPoints()
-            // TODO - this is where we pass keys[] to the okboard engine
-            // and send the result to the spell correction engine.
-            console.warn("keys pressed: " + keys)
+            curveimpl.endOneCurve(root.curveIndex)
+            console.warn("keys pressed: " + curveImpl.getResultJSON())
         }
 
         pressed = false;
