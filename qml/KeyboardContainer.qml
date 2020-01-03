@@ -24,6 +24,7 @@ Item {
     id: panel
 
     property var curve_ok: false
+    property var curveIndex: 1
 
     property int keyWidth: 0
     property int keyHeight: 0

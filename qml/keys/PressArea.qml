@@ -15,7 +15,7 @@
  */
 
 import QtQuick 2.4
-import eu.cpbm.okboard 1.0 // okboard
+import eu.cpbm.okboard 1.0
 
 /*!
   MultiPointTouchArea is similar to the MouseArea
@@ -29,6 +29,7 @@ MultiPointTouchArea {
     property bool pressed: false
     // Track whether we've swiped out of a key press to dismiss the keyboard
     property bool swipedOut: false
+    property bool hanging: false
     property bool horizontalSwipe: false
     property bool held: false
     property alias mouseX: point.x
@@ -39,7 +40,6 @@ MultiPointTouchArea {
     // point.startY, as this always reports 0 for mouse interaction 
     // (https://bugreports.qt.io/browse/QTBUG-41692)
     property real startY
-    property var keys_ok: false
 
     property bool acceptDoubleClick: false
     maximumTouchPoints: 1
@@ -55,13 +55,21 @@ MultiPointTouchArea {
         holdTimer.stop();
     }
 
+    property var keys_ok: false
     property var keyMap: []
     function walkKeyChildren(obj) {
         for (var i = 0; i < obj.children.length; i++) {
             var child = obj.children[i];
-            if (child.label && child.label != "undefined") {
-                child.caption = child.label;
-                root.keyMap.push(child);
+            if (child.label && child.label.length == 1) {
+                var p = child.mapToItem(null, child.x, child.y, child.width, child.height)
+                var keyItem = new Object;
+                keyItem.x = p.x;
+                keyItem.y = p.y;
+                console.warn("adding key " + child.label + " at point " + p.x + ", " + p.y)
+                keyItem.width = p.width;
+                keyItem.height = p.height;
+                keyItem.caption = child.label;
+                root.keyMap.push(keyItem);
             } else {
                 walkKeyChildren(child);
             }
@@ -69,14 +77,13 @@ MultiPointTouchArea {
     }
 
     function buildKeyMap() {
-        if (!root.keys_ok) {
+        if (!root.keys_ok && root.keyMap.length == 0) {
             walkKeyChildren(panel);
-            curveimpl.setLogFile("/tmp/curve.log");
-            curveimpl.setDebug(true);
-            curveimpl.loadKeys(panel.keyMap);
+            console.warn("calling curveimpl.loadkeys with " + root.keyMap)
+            curveimpl.loadKeys(root.keyMap);
+            console.warn("curveimpl.loadkeys returned")
             root.keys_ok = true;
         }
-        curveimpl.setScreenSizePixels(Screen.Width, Screen.Height);
 
     }
 
@@ -86,29 +93,17 @@ MultiPointTouchArea {
     }
 
     function addPoint(obj, x, y) {
-        var p = obj.parent.mapToItem(panel, x, y)
-        curveimpl.addPoint(p.x, p.y, root.curveIndex)
+        var p = obj.parent.mapToItem(null, x, y)
+        curveimpl.addPoint(p.x, p.y, panel.curveIndex)
     }
 
-    function walkAllPoints() {
-        var lastkey = ''
-        var res = []
-        for (var i = 0; i < allPoints.length; i++) {
-            var curPoint = allPoints[i]  // curPoints were converted at addPoint()
-            for (var j = 0; j < root.keyMap.length; j++) {
-                var keyEntry = root.keyMap[j]
-                var keyPoint = keyEntry.parent.mapToItem(panel, keyEntry.x, keyEntry.y, keyEntry.width, keyEntry.height)
-                if (curPoint.x >= keyPoint.x && curPoint.x <= keyPoint.x + keyPoint.width) {
-                    if (curPoint.y >= keyPoint.y && curPoint.y <= keyPoint.y + keyPoint.width) {
-                        if (keyEntry.label != lastkey) {
-                            res.push(keyEntry.label)
-                            lastkey = keyEntry.label
-                        }
-                    }
-                }
-            }
-        }
-        return res
+    function setupCurve() {
+        curveimpl.setLogFile("/tmp/curve.log");
+        curveimpl.setDebug(true);
+        console.warn("setting pixelsize to: " + fullScreenItem.width + "," + fullScreenItem.height)
+        curveimpl.setScreenSizePixels(fullScreenItem.width, fullScreenItem.height)
+        panel.curve_ok = curveimpl.loadTree("/usr/share/okboard/en.tre");
+        console.warn("done loading tree")
     }
 
     touchPoints: [
@@ -116,17 +111,30 @@ MultiPointTouchArea {
             id: point
 
             onXChanged: {
-                if (swipedOut) {
+                if (root.swipedOut) {
                     root.addPoint(root, point.x, point.y)
                     return
                 }
 
+                if (root.hanging)
+                    return;
+
                 if (point.x < root.x || point.x > root.x + root.width) {
-                    if (!swipedOut) {
+                    if (!root.swipedOut) {
                         // We've swiped out of the key
-                        swipedOut = true;
+                        root.swipedOut = true;
+                        if (!panel.curve_ok) {
+                            setupCurve()
+                        }
+                        if (root.keyMap.length == 0) {
+                            console.warn("building map")
+                            buildKeyMap()
+                            console.warn("done building map")
+                        }
+
                         curveimpl.resetCurve()
-                        root.curveIndex++;
+                        panel.curveIndex++;
+                        curveimpl.startCurve()
                         root.addPoint(root, firstX, firstY);
                         cancelPress();
                     }
@@ -139,15 +147,30 @@ MultiPointTouchArea {
             // mouse area to avoid conflict with swipe selection
             // of extended keys
             onYChanged: {
-                if (swipedOut) {
+                if (root.swipedOut) {
                     root.addPoint(root, point.x, point.y)
                     return
                 }
 
+                if (root.hanging)
+                    return;
+
                 if (point.y < root.y || point.y > root.y + root.height) {
-                    if (!swipedOut) {
+                    if (!root.swipedOut) {
                         // We've swiped out of the key
-                        swipedOut = true;
+                        root.swipedOut = true;
+                        if (!panel.curve_ok) {
+                            setupCurve()
+                        }
+                        if (root.keyMap.length == 0) {
+                            console.warn("building map")
+                            buildKeyMap()
+                            console.warn("done building map")
+                        }
+
+                        curveimpl.resetCurve()
+                        panel.curveIndex++;
+                        curveimpl.startCurve()
                         root.addPoint(root, firstX, firstY);
                         cancelPress();
                     }
@@ -184,7 +207,7 @@ MultiPointTouchArea {
         firstY = point.y
         pressed = true;
         held = false;
-        swipedOut = false;
+        root.swipedOut = false;
         startY = point.y;
         holdTimer.restart();
 
@@ -207,17 +230,19 @@ MultiPointTouchArea {
 
     onReleased: {
 
-        if (swipedOut) {
-            if (root.keyMap.length == 0) {
-                buildKeyMap()
-            }
-            if (!panel.curve_ok) {
-                filename = "/usr/share/okboard/en.tre";
-                panel.curve_ok = curveimpl.loadTree(filename);
-            }
+        if (root.swipedOut) {
+            root.swipedOut = false
+            root.hanging = true
             root.addPoint(root, point.x, point.y)
-            curveimpl.endOneCurve(root.curveIndex)
-            console.warn("keys pressed: " + curveImpl.getResultJSON())
+            console.warn("calling endOneCurve")
+            curveimpl.endOneCurve(panel.curveIndex)
+            //curveimpl.endCurve(panel.curveIndex)
+            console.warn("endOneCurve returned")
+            console.warn("calling getCandidates")
+            var x = curveimpl.getCandidates()
+            console.warn("getCandidates returned")
+            console.warn("getCandidates returned " + x)
+            root.hanging = false
         }
 
         pressed = false;
