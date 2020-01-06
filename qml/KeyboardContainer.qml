@@ -19,12 +19,14 @@ import QtQuick.Window 2.0
 import "languages/"
 import "keys/"
 import UbuntuKeyboard 1.0
+import eu.cpbm.okboard 1.0
+import io.thp.pyotherside 1.0
 
 Item {
     id: panel
 
     property var curve_ok: false
-    property var curveIndex: 1
+    property var curveIndex: 0
     property double scaling_ratio: 1
 
     property int keyWidth: 0
@@ -40,11 +42,34 @@ Item {
 
     property Item lastKeyPressed // Used for determining double click validity in PressArea
 
+    property var swypeAble: false
+    property var correlationId: 0
+
     state: "CHARACTERS"
 
     function closeExtendedKeys()
     {
         extendedKeysSelector.closePopover();
+    }
+
+    function matching_done(candidates) {
+        // XXX candidates is always empty.  why?
+        console.warn("matching_done: starting")
+        console.warn("matching_done: called with " + candidates)
+        // The 'guess' stuff can't actually work until we get the
+        // info about surrounding words.
+        py.call("okboard.k.guess", [ candidates, correlationId], function(result) {
+            if (result && result.length > 0) {
+                console.warn("guess completed with result: " + result)
+            } else {
+                console.warn("guess completed with empty result")
+            }
+        })
+    }
+
+    CurveKB {
+        id: curveimpl
+        onMatchingDone: { matching_done(candidates); }
     }
 
     Loader {
@@ -61,6 +86,15 @@ Item {
                 activeKeypadState = "NORMAL";
             }
         }
+    }
+
+    Python {
+        id: py
+        onError: { py.call("okboard.k.get_last_error", [], function(result) {
+            if (result != undefined) {
+                console.warn(result); 
+            }
+        }) }
     }
 
     ExtendedKeysSelector {
@@ -99,6 +133,45 @@ Item {
             panel.state = "CHARACTERS";
         }
 
+        function apply_configuration(conf) {
+            console.warn("apply_configuration starting")
+            console.warn("apply_configuration starting: conf: " + conf)
+            if (conf && conf["unchanged"]) {
+                // no configuration change
+                console.warn("no configuration change")
+
+            } else if (conf) {
+                // curve matching plugin parameters
+                console.warn("loading parameters: ")
+                curveimpl.loadParameters(conf['curve_params']);
+                console.warn("loaded parameters: " + conf['curve_params'])
+
+                // language
+                kb_lang = conf['kb_lang'];
+
+            } else {
+                conf_ok = false;
+                console.warn("Error loading configuration")
+            }
+        }
+
+        function setupCurve() {
+            py.addImportPath(Qt.resolvedUrl('/usr/share/maliit/plugins/eu/cpbm/okboard'));
+            py.importModule_sync('okboard');
+            var orientation = "default"
+            var layout = "en"
+            py.call("okboard.k.get_config", [], function(result) {
+                apply_configuration(result);
+            })
+            py.call("okboard.k.set_context", [ layout, orientation ]);
+            curveimpl.setLogFile("/tmp/curve.log");
+            console.warn("setting pixelsize to: " + fullScreenItem.width + "," + fullScreenItem.height)
+            curveimpl.setScreenSizePixels(fullScreenItem.width, fullScreenItem.height)
+            scaling_ratio = curveimpl.getScalingRatio();
+            panel.curve_ok = curveimpl.loadTree("/usr/share/okboard/en.tre");
+            console.warn("done loading tree")
+        }
+
         function loadLayout(contentType, activeLanguage)
         {
             var language = activeLanguage.toLowerCase();
@@ -124,6 +197,11 @@ Item {
             if (contentType === 2) {
                 canvas.layoutId = "telephone";
                 return "languages/Keyboard_telephone.qml";
+            }
+
+            if (language == "en" || language == "fr" || language == "nl") {
+                panel.swypeAble = true
+                setupCurve()
             }
 
             // EmailContentType

@@ -57,7 +57,6 @@ MultiPointTouchArea {
 
     property var keys_ok: false
     property var keyMap: []
-    property var correlationId: 0
     function walkKeyChildren(obj) {
         for (var i = 0; i < obj.children.length; i++) {
             var child = obj.children[i];
@@ -89,78 +88,18 @@ MultiPointTouchArea {
 
     }
 
-    function matching_done(candidates) {
-        // XXX candidates is always empty.  why?
-        console.warn("matching_done: called with " + candidates)
-        // The 'guess' stuff can't actually work until we get the
-        // info about surrounding words.
-        py.call("okboard.k.guess", [ candidates, correlationId], function(result) {
-            if (result && result.length > 0) {
-                console.warn("guess completed with result: " + result)
-            } else {
-                console.warn("guess completed with empty result")
-            }
-        })
-    }
-
     Python {
         id: py
-        onError: { py.call("okboard.k.get_last_error", [], function(result) { show_error(result); }) }
-    }
-
-
-
-    CurveKB {
-        id: curveimpl
-        onMatchingDone: { matching_done(candidates); }
+        onError: { py.call("okboard.k.get_last_error", [], function(result) {
+            if (result != undefined) {
+                console.warn(result); 
+            }
+        }) }
     }
 
     function addPoint(obj, x, y) {
         var p = obj.parent.mapToItem(null, x, y)
         curveimpl.addPoint(p.x, p.y, panel.curveIndex)
-    }
-
-    function apply_configuration(conf) {
-        if (conf && conf["unchanged"]) {
-            // no configuration change
-
-        } else if (conf) {
-            log("configuration updated:")
-            var msg = "> ";
-            for (var k in conf) {
-                if (conf.hasOwnProperty(k)) {
-                    if (msg.length + conf[k].length > 80) { log(msg); msg = "> "; }
-                    msg += " " + k + "=" + conf[k];
-                }
-            }
-            console.warn(msg);
-
-            // curve matching plugin parameters
-            curveimpl.loadParameters(conf['curve_params']);
-
-            // language
-            kb_lang = conf['kb_lang'];
-
-        } else {
-            conf_ok = false;
-            console.warn("Error loading configuration", true);
-        }
-    }
-    function setupCurve() {
-        py.addImportPath(Qt.resolvedUrl('/usr/share/maliit/plugins/eu/cpbm/okboard'));
-        py.importModule_sync('okboard');
-        var orientation = "default"
-        var layout = "en"
-        py.call("okboard.k.set_context", [ layout, orientation ]);
-        curveimpl.setLogFile("/tmp/curve.log");
-        py.call("okboard.k.get_config", [], function(result) {
-            apply_configuration(result);
-        })
-        console.warn("setting pixelsize to: " + fullScreenItem.width + "," + fullScreenItem.height)
-        curveimpl.setScreenSizePixels(fullScreenItem.width, fullScreenItem.height)
-        scaling_ratio = curveimpl.getScalingRatio();
-        panel.curve_ok = curveimpl.loadTree("/usr/share/okboard/en.tre");
-        console.warn("done loading tree")
     }
 
     touchPoints: [
@@ -173,13 +112,13 @@ MultiPointTouchArea {
                     return
                 }
 
+                if (!panel.swypeAble) {
+                    return
+                }
                 if (point.x < root.x || point.x > root.x + root.width) {
                     if (!root.swipedOut) {
                         // We've swiped out of the key
                         root.swipedOut = true;
-                        if (!panel.curve_ok) {
-                            setupCurve()
-                        }
                         if (root.keyMap.length == 0) {
                             console.warn("building map")
                             buildKeyMap()
@@ -205,13 +144,14 @@ MultiPointTouchArea {
                     return
                 }
 
+                if (!panel.swypeAble) {
+                    return
+                }
+
                 if (point.y < root.y || point.y > root.y + root.height) {
                     if (!root.swipedOut) {
                         // We've swiped out of the key
                         root.swipedOut = true;
-                        if (!panel.curve_ok) {
-                            setupCurve()
-                        }
                         if (root.keyMap.length == 0) {
                             console.warn("building map")
                             buildKeyMap()
@@ -283,7 +223,7 @@ MultiPointTouchArea {
             root.swipedOut = false
             root.addPoint(root, point.x, point.y)
             console.warn("calling endCurve")
-            curveimpl.endCurveAsync(++ correlationId)
+            curveimpl.endCurveAsync(++ panel.correlationId)
             console.warn("endOneCurve returned")
         }
 
